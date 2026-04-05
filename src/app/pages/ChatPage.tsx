@@ -9,6 +9,7 @@ import imgJimeng2026030266462D3D1 from "figma:asset/d834302f12a4aa666948d09ac39a
 export function ChatPage() {
   const navigate = useNavigate();
   const {
+    userInfo,
     messages,
     addMessage,
     isRecording,
@@ -36,21 +37,26 @@ export function ChatPage() {
 
     // Simulate AI response based on conversation flow
     setTimeout(() => {
-      if (conversationStep === 0 && userMessage.includes('需要')) {
-        addMessage('assistant', '我先看看你的气色。');
-        setConversationStep(1);
+      if (conversationStep === 0) {
+        if (userMessage.includes('需要') && !userMessage.includes('不需要')) {
+          addMessage('assistant', '我先看看你的气色。');
+          setConversationStep(1);
 
-        setTimeout(() => {
-          setIsAnalyzing(true);
           setTimeout(() => {
-            setIsAnalyzing(false);
-            addMessage('assistant', '我看你今天气色略偏淡。');
+            setIsAnalyzing(true);
             setTimeout(() => {
-              addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
-              setConversationStep(2);
-            }, 1000);
-          }, 2000);
-        }, 1000);
+              setIsAnalyzing(false);
+              addMessage('assistant', '我看你今天气色略偏淡。');
+              setTimeout(() => {
+                addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
+                setConversationStep(2);
+              }, 1000);
+            }, 2000);
+          }, 1000);
+        } else if (userMessage.includes('不需要')) {
+          addMessage('assistant', '好的，有需要随时来找我，我会一直陪伴着你。😊');
+          setConversationStep(-1); // End conversation
+        }
       } else if (conversationStep === 3) {
         if (userMessage.includes('睡') || userMessage.includes('失眠')) {
           addMessage(
@@ -81,21 +87,26 @@ export function ChatPage() {
 
     // Simulate AI response based on conversation flow
     setTimeout(() => {
-      if (conversationStep === 0 && userMessage.includes('需要')) {
-        addMessage('assistant', '我先看看你的气色。');
-        setConversationStep(1);
+      if (conversationStep === 0) {
+        if (userMessage.includes('需要') && !userMessage.includes('不需要')) {
+          addMessage('assistant', '我先看看你的气色。');
+          setConversationStep(1);
 
-        setTimeout(() => {
-          setIsAnalyzing(true);
           setTimeout(() => {
-            setIsAnalyzing(false);
-            addMessage('assistant', '我看你今天气色略偏淡。');
+            setIsAnalyzing(true);
             setTimeout(() => {
-              addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
-              setConversationStep(2);
-            }, 1000);
-          }, 2000);
-        }, 1000);
+              setIsAnalyzing(false);
+              addMessage('assistant', '我看你今天气色略偏淡。');
+              setTimeout(() => {
+                addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
+                setConversationStep(2);
+              }, 1000);
+            }, 2000);
+          }, 1000);
+        } else if (userMessage.includes('不需要')) {
+          addMessage('assistant', '好的，有需要随时来找我，我会一直陪伴着你。😊');
+          setConversationStep(-1); // End conversation
+        }
       } else if (conversationStep === 3) {
         if (userMessage.includes('睡') || userMessage.includes('失眠')) {
           addMessage(
@@ -147,7 +158,7 @@ export function ChatPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="font-['Noto_Sans_SC:Medium',sans-serif] text-[24px] text-black mb-1">
-              你好 CC!
+              你好 {userInfo?.name || '朋友'}!
             </h1>
             <p className="font-['Noto_Sans_SC:Medium',sans-serif] text-[24px] text-black">
               我是脉医生！

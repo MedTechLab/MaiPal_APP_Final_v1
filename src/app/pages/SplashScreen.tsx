@@ -7,7 +7,7 @@ export function SplashScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/permissions');
+      navigate('/userinfo');
     }, 2000);
 
     return () => clearTimeout(timer);

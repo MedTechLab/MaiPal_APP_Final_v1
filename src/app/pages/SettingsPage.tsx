@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router';
-import { ChevronLeft, User, Heart, Bell, Shield, Palette, HelpCircle, LogOut, Volume2 } from 'lucide-react';
+import { ChevronLeft, User, Heart, Bell, Shield, Palette, HelpCircle, LogOut, Volume2, Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { generateHealthReport, hasPlan } = useAppContext();
+  const { userInfo, updateUserInfo, generateHealthReport, hasPlan } = useAppContext();
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [editPhone, setEditPhone] = useState(userInfo?.phone || '');
+  const [editEmail, setEditEmail] = useState(userInfo?.email || '');
   const [preferences, setPreferences] = useState({
     faceAnalysis: true,
     voiceAnalysis: true,
@@ -23,6 +26,14 @@ export function SettingsPage() {
 
   const togglePreference = (key: keyof typeof preferences) => {
     setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSaveAccountInfo = () => {
+    updateUserInfo({
+      phone: editPhone || undefined,
+      email: editEmail || undefined,
+    });
+    setIsEditingAccount(false);
   };
 
   return (
@@ -79,45 +90,77 @@ export function SettingsPage() {
           
           <div className="bg-[rgba(236,209,180,0.1)] rounded-[16px] p-3 mb-3 flex items-center gap-4">
             <div className="bg-[#ecd1b4] rounded-full size-16 flex items-center justify-center text-[32px]">
-              👤
+              {userInfo?.gender === 'male' ? '👨' : userInfo?.gender === 'female' ? '👩' : '👤'}
             </div>
             <div className="flex-1">
               <p className="font-['Noto_Sans_SC:Bold',sans-serif] text-[21.33px] text-black tracking-[0.67px]">
-                CC
+                {userInfo?.name || '未设置'}
               </p>
               <p className="font-['Noto_Sans_SC:Regular',sans-serif] text-[17.33px] text-[rgba(0,0,0,0.6)] tracking-[0.67px]">
-                女 · 1995-06-15
+                {userInfo?.gender === 'male' ? '男' : userInfo?.gender === 'female' ? '女' : ''} · {userInfo?.age ? `${userInfo.age}岁` : '未设置年龄'}
               </p>
             </div>
-            <button className="font-['Noto_Sans_SC:Medium',sans-serif] text-[18.67px] text-[#d3b697] tracking-[0.67px]">
-              编辑
+            <button 
+              onClick={() => setIsEditingAccount(!isEditingAccount)}
+              className="font-['Noto_Sans_SC:Medium',sans-serif] text-[18.67px] text-[#d3b697] tracking-[0.67px]"
+            >
+              {isEditingAccount ? '取消' : '编辑'}
             </button>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-2 text-[rgba(0,0,0,0.7)]">
-                <Volume2 className="size-4" />
+                <Phone className="size-4" />
                 <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] tracking-[0.67px]">
                   手机号
                 </span>
               </div>
-              <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-black tracking-[0.67px]">
-                138****8888
-              </span>
+              {isEditingAccount ? (
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="请输入手机号"
+                  className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-black tracking-[0.67px] bg-[rgba(236,209,180,0.1)] px-3 py-1 rounded-lg outline-none focus:ring-2 focus:ring-[#ecd1b4]"
+                />
+              ) : (
+                <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-[rgba(0,0,0,0.4)] tracking-[0.67px]">
+                  {userInfo?.phone || '未设置'}
+                </span>
+              )}
             </div>
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-2 text-[rgba(0,0,0,0.7)]">
-                <Bell className="size-4" />
+                <Mail className="size-4" />
                 <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] tracking-[0.67px]">
                   邮箱
                 </span>
               </div>
-              <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-black tracking-[0.67px]">
-                cc@example.com
-              </span>
+              {isEditingAccount ? (
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="请输入邮箱"
+                  className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-black tracking-[0.67px] bg-[rgba(236,209,180,0.1)] px-3 py-1 rounded-lg outline-none focus:ring-2 focus:ring-[#ecd1b4]"
+                />
+              ) : (
+                <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[18.67px] text-[rgba(0,0,0,0.4)] tracking-[0.67px]">
+                  {userInfo?.email || '未设置'}
+                </span>
+              )}
             </div>
           </div>
+
+          {isEditingAccount && (
+            <button
+              onClick={handleSaveAccountInfo}
+              className="w-full mt-3 bg-[#ecd1b4] text-black py-3 rounded-[13px] font-['Noto_Sans_SC:Medium',sans-serif] text-[18.67px] tracking-[0.67px] active:scale-95 transition-transform"
+            >
+              保存
+            </button>
+          )}
         </div>
 
         {/* Health Preferences */}
@@ -340,7 +383,7 @@ export function SettingsPage() {
             </h2>
           </div>
           <button className="w-full py-3 font-['Noto_Sans_SC:Medium',sans-serif] text-[18.67px] text-[#ff3b30] tracking-[0.67px] active:scale-95 transition-transform">
-            ��销账号
+            销账号
           </button>
         </div>
 

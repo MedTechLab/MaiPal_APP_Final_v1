@@ -14,7 +14,23 @@ interface HealthReport {
   suggestions: string[];
 }
 
+interface UserInfo {
+  name: string;
+  gender: 'male' | 'female';
+  age: number;
+  height?: number;
+  weight?: number;
+  concerns: string[];
+  phone?: string;
+  email?: string;
+}
+
 interface AppContextType {
+  // User Info
+  userInfo: UserInfo | null;
+  setUserInfo: (info: UserInfo) => void;
+  updateUserInfo: (updates: Partial<UserInfo>) => void;
+  
   // Permissions
   cameraPermission: boolean | null;
   micPermission: boolean | null;
@@ -43,6 +59,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [userInfo, setUserInfoState] = useState<UserInfo | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [micPermission, setMicPermission] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<Message[]>([
@@ -57,6 +74,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [healthReport, setHealthReport] = useState<HealthReport | null>(null);
   const [hasPlan, setHasPlan] = useState(false);
   const [tasks, setTasks] = useState<Array<{ id: string; text: string; completed: boolean }>>([]);
+
+  const setUserInfo = (info: UserInfo) => {
+    setUserInfoState(info);
+  };
+
+  const updateUserInfo = (updates: Partial<UserInfo>) => {
+    setUserInfoState((prev) => (prev ? { ...prev, ...updates } : null));
+  };
 
   const requestCameraPermission = () => {
     setCameraPermission(true);
@@ -120,6 +145,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
+        userInfo,
+        setUserInfo,
+        updateUserInfo,
         cameraPermission,
         micPermission,
         requestCameraPermission,

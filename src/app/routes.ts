@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { SplashScreen } from "./pages/SplashScreen";
+import { UserInfoPage } from "./pages/UserInfoPage";
 import { PermissionsScreen } from "./pages/PermissionsScreen";
 import { MainLayout } from "./layouts/MainLayout";
 import { ChatPage } from "./pages/ChatPage";
@@ -13,6 +14,10 @@ export const router = createBrowserRouter([
   {
     path: "/",
     Component: SplashScreen,
+  },
+  {
+    path: "/userinfo",
+    Component: UserInfoPage,
   },
   {
     path: "/permissions",
