@@ -25,6 +25,28 @@ interface UserInfo {
   email?: string;
 }
 
+interface CartItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
+interface TaskCheckIn {
+  taskId: string;
+  date: string;
+  photoUrl?: string;
+}
+
+interface DayRecord {
+  date: string; // YYYY-MM-DD
+  hasReport: boolean;
+  tasksCompleted: number;
+  totalTasks: number;
+}
+
 interface AppContextType {
   // User Info
   userInfo: UserInfo | null;
@@ -48,12 +70,31 @@ interface AppContextType {
   // Health Report
   healthReport: HealthReport | null;
   generateHealthReport: () => void;
+  healthReports: Record<string, HealthReport>; // date -> report
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
   
-  // Plan
+  // Plan & Tasks
   hasPlan: boolean;
-  tasks: Array<{ id: string; text: string; completed: boolean }>;
+  tasks: Array<{ id: string; text: string; completed: boolean; checkIn?: TaskCheckIn }>;
   toggleTask: (id: string) => void;
   generatePlan: () => void;
+  addTaskCheckIn: (taskId: string, photoUrl?: string) => void;
+  
+  // Points System
+  points: number;
+  addPoints: (amount: number, reason: string) => void;
+  usePoints: (amount: number) => boolean;
+  pointsHistory: Array<{ id: string; amount: number; reason: string; date: Date; type: 'earn' | 'spend' }>;
+  
+  // Cart
+  cartItems: CartItem[];
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  updateCartItemQuantity: (id: string, delta: number) => void;
+  removeFromCart: (id: string) => void;
+  
+  // Calendar
+  dayRecords: Record<string, DayRecord>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -72,8 +113,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ]);
   const [isRecording, setIsRecording] = useState(false);
   const [healthReport, setHealthReport] = useState<HealthReport | null>(null);
+  const [healthReports, setHealthReports] = useState<Record<string, HealthReport>>({});
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [hasPlan, setHasPlan] = useState(false);
-  const [tasks, setTasks] = useState<Array<{ id: string; text: string; completed: boolean }>>([]);
+  const [tasks, setTasks] = useState<Array<{ id: string; text: string; completed: boolean; checkIn?: TaskCheckIn }>>([]);
+  const [points, setPoints] = useState(0);
+  const [pointsHistory, setPointsHistory] = useState<Array<{ id: string; amount: number; reason: string; date: Date; type: 'earn' | 'spend' }>>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [dayRecords, setDayRecords] = useState<Record<string, DayRecord>>({});
 
   const setUserInfo = (info: UserInfo) => {
     setUserInfoState(info);
@@ -121,6 +168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ],
     };
     setHealthReport(report);
+    setHealthReports((prev) => ({ ...prev, [report.date]: report }));
   };
 
   const generatePlan = () => {
@@ -142,6 +190,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const addTaskCheckIn = (taskId: string, photoUrl?: string) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, checkIn: { taskId, date: new Date().toISOString().split('T')[0], photoUrl } } : task
+      )
+    );
+  };
+
+  const addPoints = (amount: number, reason: string) => {
+    setPoints((prev) => prev + amount);
+    setPointsHistory((prev) => [...prev, { id: Date.now().toString(), amount, reason, date: new Date(), type: 'earn' }]);
+  };
+
+  const usePoints = (amount: number) => {
+    if (points >= amount) {
+      setPoints((prev) => prev - amount);
+      setPointsHistory((prev) => [...prev, { id: Date.now().toString(), amount, reason: '使用积分', date: new Date(), type: 'spend' }]);
+      return true;
+    }
+    return false;
+  };
+
+  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+    setCartItems((prev) => {
+      const existingItem = prev.find((cartItem) => cartItem.id === item.id);
+      if (existingItem) {
+        return prev.map((cartItem) =>
+          cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+        );
+      } else {
+        return [...prev, { ...item, quantity: 1 }];
+      }
+    });
+  };
+
+  const updateCartItemQuantity = (id: string, delta: number) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+      )
+    );
+  };
+
+  const removeFromCart = (id: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -160,10 +255,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsRecording,
         healthReport,
         generateHealthReport,
+        healthReports,
+        selectedDate,
+        setSelectedDate,
         hasPlan,
         tasks,
         toggleTask,
         generatePlan,
+        addTaskCheckIn,
+        points,
+        addPoints,
+        usePoints,
+        pointsHistory,
+        cartItems,
+        addToCart,
+        updateCartItemQuantity,
+        removeFromCart,
+        dayRecords,
       }}
     >
       {children}

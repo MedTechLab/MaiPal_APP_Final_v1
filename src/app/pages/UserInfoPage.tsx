@@ -17,7 +17,7 @@ export function UserInfoPage() {
   const [formData, setFormData] = useState({
     name: '',
     gender: '' as 'male' | 'female' | '',
-    age: '',
+    age: '50',
     height: '',
     weight: '',
     concerns: [] as string[],
@@ -62,8 +62,8 @@ export function UserInfoPage() {
       concerns: formData.concerns,
     });
 
-    // Navigate to permissions
-    navigate('/permissions');
+    // Navigate directly to chat
+    navigate('/app/chat');
   };
 
   return (
@@ -92,7 +92,7 @@ export function UserInfoPage() {
             transition={{ delay: 0.1 }}
           >
             <label className="block font-['Noto_Sans_SC:Medium',sans-serif] text-[16px] text-black mb-2">
-              姓名 <span className="text-red-500">*</span>
+              昵称 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -101,7 +101,7 @@ export function UserInfoPage() {
                 setFormData({ ...formData, name: e.target.value });
                 setErrors({ ...errors, name: false });
               }}
-              placeholder="请输入您的姓名"
+              placeholder="请输入您的昵称"
               className={`w-full bg-white rounded-[16px] px-4 py-4 font-['Noto_Sans_SC:Regular',sans-serif] text-[16px] text-black outline-none border-2 transition-colors ${
                 errors.name
                   ? 'border-red-500'
@@ -110,7 +110,7 @@ export function UserInfoPage() {
             />
             {errors.name && (
               <p className="mt-1 text-[13px] text-red-500 font-['Noto_Sans_SC:Regular',sans-serif]">
-                请输入姓名
+                请输入昵称
               </p>
             )}
           </motion.div>

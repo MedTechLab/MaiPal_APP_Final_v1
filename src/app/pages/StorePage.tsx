@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ShoppingCart, MapPin, Star } from 'lucide-react';
+import { ShoppingCart, MapPin, Star, Gift } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAppContext } from '../contexts/AppContext';
 
 type TabType = 'food' | 'doctor';
 
@@ -25,8 +26,8 @@ interface Clinic {
 
 export function StorePage() {
   const navigate = useNavigate();
+  const { cartItems, addToCart, points } = useAppContext();
   const [activeTab, setActiveTab] = useState<TabType>('food');
-  const [cartCount] = useState(3); // Mock cart count
 
   const foodProducts: Product[] = [
     {
@@ -102,11 +103,21 @@ export function StorePage() {
     <div className="bg-gradient-to-b from-[rgba(236,209,180,0.2)] to-white h-full overflow-y-auto">
       {/* Header */}
       <div className="px-6 pt-12 pb-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="font-['Noto_Sans_SC:Bold',sans-serif] text-[28px] text-black">
             中医馆
           </h1>
+          <div className="flex items-center gap-2 bg-gradient-to-r from-[#ecd1b4] to-[#d4b89e] px-4 py-2 rounded-full shadow-sm">
+            <Gift className="size-5 text-white" />
+            <span className="font-['Noto_Sans_SC:Medium',sans-serif] text-[16px] text-white">
+              {points} 积分
+            </span>
+          </div>
         </div>
+        
+        <p className="font-['Noto_Sans_SC:Regular',sans-serif] text-[13px] text-[#8a7a6a] mb-6">
+          100积分可抵扣¥10，200积分可抵扣¥25
+        </p>
 
         {/* Tab Switcher */}
         <div className="bg-white rounded-[16px] p-1 flex shadow-sm">
@@ -158,7 +169,10 @@ export function StorePage() {
                     <span className="font-['Noto_Sans_SC:Bold',sans-serif] text-[18px] text-[#ecd1b4]">
                       ¥{product.price}
                     </span>
-                    <button className="bg-[#ecd1b4] text-black px-4 py-1.5 rounded-full text-[14px] font-['Noto_Sans_SC:Medium',sans-serif] active:scale-95 transition-transform">
+                    <button
+                      className="bg-[#ecd1b4] text-black px-4 py-1.5 rounded-full text-[14px] font-['Noto_Sans_SC:Medium',sans-serif] active:scale-95 transition-transform"
+                      onClick={() => addToCart(product)}
+                    >
                       加入
                     </button>
                   </div>
@@ -233,9 +247,9 @@ export function StorePage() {
           className="fixed bottom-[100px] right-6 z-50 bg-[#ecd1b4] rounded-full size-[56px] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
         >
           <ShoppingCart className="size-6 text-white" />
-          {cartCount > 0 && (
+          {cartItems.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-bold rounded-full size-5 flex items-center justify-center">
-              {cartCount}
+              {cartItems.length}
             </span>
           )}
         </motion.button>

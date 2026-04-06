@@ -15,12 +15,19 @@ export function ChatPage() {
     isRecording,
     setIsRecording,
     cameraPermission,
+    micPermission,
+    requestCameraPermission,
+    requestMicPermission,
+    denyCameraPermission,
+    denyMicPermission,
     generateHealthReport,
   } = useAppContext();
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [conversationStep, setConversationStep] = useState(0);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
+  const [showCameraPermissionModal, setShowCameraPermissionModal] = useState(false);
+  const [showMicPermissionModal, setShowMicPermissionModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,31 +40,31 @@ export function ChatPage() {
     addMessage('user', inputValue);
     const userMessage = inputValue.toLowerCase();
     setInputValue('');
-    setShowQuickReplies(false);
 
     // Simulate AI response based on conversation flow
     setTimeout(() => {
       if (conversationStep === 0) {
         if (userMessage.includes('需要') && !userMessage.includes('不需要')) {
+          setShowQuickReplies(false);
           addMessage('assistant', '我先看看你的气色。');
           setConversationStep(1);
 
-          setTimeout(() => {
-            setIsAnalyzing(true);
-            setTimeout(() => {
-              setIsAnalyzing(false);
-              addMessage('assistant', '我看你今天气色略偏淡。');
-              setTimeout(() => {
-                addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
-                setConversationStep(2);
-              }, 1000);
-            }, 2000);
-          }, 1000);
+          // Check camera permission first
+          if (cameraPermission === null) {
+            setShowCameraPermissionModal(true);
+          } else {
+            startFaceAnalysis();
+          }
         } else if (userMessage.includes('不需要')) {
           addMessage('assistant', '好的，有需要随时来找我，我会一直陪伴着你。😊');
           setConversationStep(-1); // End conversation
+          // Keep quick replies visible for next time
+          setTimeout(() => {
+            setShowQuickReplies(true);
+          }, 100);
         }
       } else if (conversationStep === 3) {
+        setShowQuickReplies(false);
         if (userMessage.includes('睡') || userMessage.includes('失眠')) {
           addMessage(
             'assistant',
@@ -83,31 +90,31 @@ export function ChatPage() {
   const handleQuickReply = (text: string) => {
     addMessage('user', text);
     const userMessage = text.toLowerCase();
-    setShowQuickReplies(false);
 
     // Simulate AI response based on conversation flow
     setTimeout(() => {
-      if (conversationStep === 0) {
+      if (conversationStep === 0 || conversationStep === -1) {
         if (userMessage.includes('需要') && !userMessage.includes('不需要')) {
-          addMessage('assistant', '我先看看你的气色。');
+          setShowQuickReplies(false);
           setConversationStep(1);
+          addMessage('assistant', '我先看看你的气色。');
 
-          setTimeout(() => {
-            setIsAnalyzing(true);
-            setTimeout(() => {
-              setIsAnalyzing(false);
-              addMessage('assistant', '我看你今天气色略偏淡。');
-              setTimeout(() => {
-                addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
-                setConversationStep(2);
-              }, 1000);
-            }, 2000);
-          }, 1000);
+          // Check camera permission first
+          if (cameraPermission === null) {
+            setShowCameraPermissionModal(true);
+          } else {
+            startFaceAnalysis();
+          }
         } else if (userMessage.includes('不需要')) {
           addMessage('assistant', '好的，有需要随时来找我，我会一直陪伴着你。😊');
           setConversationStep(-1); // End conversation
+          // Keep quick replies visible for next time
+          setTimeout(() => {
+            setShowQuickReplies(true);
+          }, 100);
         }
       } else if (conversationStep === 3) {
+        setShowQuickReplies(false);
         if (userMessage.includes('睡') || userMessage.includes('失眠')) {
           addMessage(
             'assistant',
@@ -130,9 +137,32 @@ export function ChatPage() {
     }, 800);
   };
 
+  const startFaceAnalysis = () => {
+    setTimeout(() => {
+      setIsAnalyzing(true);
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        addMessage('assistant', '我看你今天气色略偏淡。');
+        setTimeout(() => {
+          addMessage('assistant', '可以和我说两句话吗？点击麦克风按钮开始。');
+          setConversationStep(2);
+        }, 1000);
+      }, 2000);
+    }, 1000);
+  };
+
   const handleMicPress = () => {
     if (conversationStep !== 2) return;
 
+    if (micPermission === null) {
+      setShowMicPermissionModal(true);
+      return;
+    }
+
+    startRecording();
+  };
+
+  const startRecording = () => {
     setIsRecording(true);
 
     // Simulate recording for 3 seconds
@@ -233,7 +263,7 @@ export function ChatPage() {
                     />
                   </div>
                   <span className="font-['Noto_Sans_SC:Regular',sans-serif] text-[14px] text-[#8a7a6a]">
-                    正在分析中...
+                    正在检测中...
                   </span>
                 </div>
               </div>
@@ -287,7 +317,7 @@ export function ChatPage() {
       {/* Input Area */}
       <div className="bg-white/75 px-6 py-4 shadow-[0px_-4px_20px_0px_rgba(0,0,0,0.1)] relative z-10">
         {/* Quick Reply Buttons */}
-        {showQuickReplies && conversationStep === 0 && (
+        {showQuickReplies && (conversationStep === 0 || conversationStep === -1) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -341,7 +371,7 @@ export function ChatPage() {
             />
             <button onClick={handleMicPress} disabled={isRecording}>
               <Mic
-                className={`size-5 ${
+                className={`size-7 ${
                   isRecording ? 'text-red-500' : 'text-[rgba(0,0,0,0.6)]'
                 }`}
               />
@@ -356,6 +386,78 @@ export function ChatPage() {
           </button>
         </div>
       </div>
+
+      {/* Camera Permission Modal */}
+      {showCameraPermissionModal && (
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm mx-6">
+            <h2 className="font-['Noto_Sans_SC:Medium',sans-serif] text-[20px] text-black mb-4 text-center">
+              "脉伴"想访问您的相机
+            </h2>
+            <p className="font-['Noto_Sans_SC:Regular',sans-serif] text-[16px] text-[#8a7a6a] mb-6 text-center">
+              用于面部气色分析，帮助更好地了解您的健康状况
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  requestCameraPermission();
+                  setShowCameraPermissionModal(false);
+                  startFaceAnalysis();
+                }}
+                className="w-full bg-[#007AFF] text-white font-['Noto_Sans_SC:Medium',sans-serif] text-[17px] py-3 rounded-[10px] active:scale-95 transition-transform"
+              >
+                允许
+              </button>
+              <button
+                onClick={() => {
+                  denyCameraPermission();
+                  setShowCameraPermissionModal(false);
+                  addMessage('assistant', '好的，如需面部分析可在设置中开启相机权限。');
+                }}
+                className="w-full bg-transparent text-[#007AFF] font-['Noto_Sans_SC:Medium',sans-serif] text-[17px] py-3 rounded-[10px] active:scale-95 transition-transform"
+              >
+                不允许
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mic Permission Modal */}
+      {showMicPermissionModal && (
+        <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm mx-6">
+            <h2 className="font-['Noto_Sans_SC:Medium',sans-serif] text-[20px] text-black mb-4 text-center">
+              "脉伴"想访问您的麦克风
+            </h2>
+            <p className="font-['Noto_Sans_SC:Regular',sans-serif] text-[16px] text-[#8a7a6a] mb-6 text-center">
+              用于声音分析，帮助更好地了解您的健康状况
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  requestMicPermission();
+                  setShowMicPermissionModal(false);
+                  startRecording();
+                }}
+                className="w-full bg-[#007AFF] text-white font-['Noto_Sans_SC:Medium',sans-serif] text-[17px] py-3 rounded-[10px] active:scale-95 transition-transform"
+              >
+                允许
+              </button>
+              <button
+                onClick={() => {
+                  denyMicPermission();
+                  setShowMicPermissionModal(false);
+                  addMessage('assistant', '好的，如需声音分析可在设置中开启麦克风权限。');
+                }}
+                className="w-full bg-transparent text-[#007AFF] font-['Noto_Sans_SC:Medium',sans-serif] text-[17px] py-3 rounded-[10px] active:scale-95 transition-transform"
+              >
+                不允许
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

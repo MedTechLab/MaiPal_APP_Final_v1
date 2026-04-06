@@ -1,7 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import { SplashScreen } from "./pages/SplashScreen";
 import { UserInfoPage } from "./pages/UserInfoPage";
-import { PermissionsScreen } from "./pages/PermissionsScreen";
 import { MainLayout } from "./layouts/MainLayout";
 import { ChatPage } from "./pages/ChatPage";
 import { SummaryPage } from "./pages/SummaryPage";
@@ -9,6 +8,7 @@ import { StorePage } from "./pages/StorePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { CartPage } from "./pages/CartPage";
 import { ClinicDetailPage } from "./pages/ClinicDetailPage";
+import { MonthCalendarPage } from "./pages/MonthCalendarPage";
 
 export const router = createBrowserRouter([
   {
@@ -18,10 +18,6 @@ export const router = createBrowserRouter([
   {
     path: "/userinfo",
     Component: UserInfoPage,
-  },
-  {
-    path: "/permissions",
-    Component: PermissionsScreen,
   },
   {
     path: "/settings",
@@ -38,6 +34,10 @@ export const router = createBrowserRouter([
   {
     path: "/clinic/:clinicId",
     Component: ClinicDetailPage,
+  },
+  {
+    path: "/month-calendar",
+    Component: MonthCalendarPage,
   },
   {
     path: "/app",
